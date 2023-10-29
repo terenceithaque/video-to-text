@@ -66,13 +66,6 @@ class Application(Tk):
 
         self.title(basename(video_path))
 
-    def video_to_audio(self):
-        "Convertir la vidéo en audio"
-
-        clip = mp.VideoFileClip(f"{video_path}")
-
-        return clip.audio.write_audiofile(f"output.mp3")
-
     def pause(self):
         "Mettre le lecteur sur pause"
         self.player.set_pause(1)
@@ -91,8 +84,28 @@ class Application(Tk):
         else:
             self.pause()  # Mettre le média en pause
 
+    def video_to_audio(self):
+        "Convertir la vidéo en audio"
+
+        clip = mp.VideoFileClip(f"{video_path}")
+
+        return clip.audio.write_audiofile(f"output.wav")
+
     def audio_to_text(self):
         "Convertir l'audio en texte"
+        self.video_to_audio()  # Convertir la vidéo en audio
+        recognition = sr.Recognizer()
+
+        with sr.AudioFile("output.wav") as source:
+            audio = recognition.record(source)
+            texte = recognition.recognize_google(audio)
+            print(texte)
+            text_file_path = filedialog.asksaveasfilename(
+                title="Enregistrer l'audio sous forme de texte", defaultextension=".txt")
+
+            with open(text_file_path, "a") as f:
+                f.write(str(texte))
+                f.close()
 
 
 app = Application()
