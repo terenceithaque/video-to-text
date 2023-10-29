@@ -20,10 +20,21 @@ class Application(Tk):
         self.menu_fichier.add_command(
             label="Ouvrir un fichier vidéo...", command=self.open_video)
 
-        self.menu_fichier.add_command(
-            label="Convertir l'audio en texte", command=None)
-
         self.barre_menu.add_cascade(label="Fichier", menu=self.menu_fichier)
+
+        self.menu_edition = Menu(self, tearoff=0)  # Créer un menu "Edition"
+        self.menu_edition.add_command(
+            label="Convertir l'audio au format texte...", command=self.audio_to_text)
+        self.barre_menu.add_cascade(label="Edition", menu=self.menu_edition)
+
+        # Ajouter un menu "Lecture"
+        self.menu_lecture = Menu(self.barre_menu, tearoff=0)
+        self.menu_lecture.add_command(
+            label="Pause  Espace", command=self.pause)
+        self.menu_lecture.add_command(
+            label="Reprendre la lecture     Espace", command=self.play)
+
+        self.barre_menu.add_cascade(label="Lecture", menu=self.menu_lecture)
 
         self.video_frame = Frame(self, width=1000, height=1000)
         self.video_frame.pack()
@@ -32,21 +43,56 @@ class Application(Tk):
 
         self.config(menu=self.barre_menu)
 
+        self.player = None
+
+        self.media_pause = False  # Le lecteur est-il en pause ?
+
+        self.bind("<space>", self.play_or_pause)
+
     def open_video(self):
         "Ouvrir un fichier vidéo"
+        global video_path
         video_path = filedialog.askopenfilename(title="Ouvrir un fichier vidéo", filetypes=[
-                                                ("Fichier MP4", "*.mp4"), ("Fichier AVI", "*.avi")])
+                                                ("Fichier MP4", "*.mp4"), ("Fichier AVI", "*.avi"), ("Fichier MKV", "*.mkv"), ("Tout les formats", "*.*")])
 
         instance = vlc.Instance()
-        player = instance.media_player_new()
+        self.player = instance.media_player_new()
 
-        player.set_hwnd(self.frame_winfo_id)
+        self.player.set_hwnd(self.frame_winfo_id)
 
         media = instance.media_new(video_path)
-        player.set_media(media)
-        player.play()
+        self.player.set_media(media)
+        self.player.play()
 
         self.title(basename(video_path))
+
+    def video_to_audio(self):
+        "Convertir la vidéo en audio"
+
+        clip = mp.VideoFileClip(f"{video_path}")
+
+        return clip.audio.write_audiofile(f"output.mp3")
+
+    def pause(self):
+        "Mettre le lecteur sur pause"
+        self.player.set_pause(1)
+        self.media_pause = True
+
+    def play(self):
+        "Reprendre la lecture"
+        self.player.set_pause(0)
+        self.media_pause = False
+
+    def play_or_pause(self, event):
+        "Reprendre la lecture ou mettre en pause"
+        if self.media_pause == True:  # Si la pause est active
+            self.play()  # Reprendre la lecture
+
+        else:
+            self.pause()  # Mettre le média en pause
+
+    def audio_to_text(self):
+        "Convertir l'audio en texte"
 
 
 app = Application()
