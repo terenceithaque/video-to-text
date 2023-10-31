@@ -1,9 +1,11 @@
 # Programme pour convertir l'audio d'une vidéo en un fichier texte
 from tkinter import *
 from tkinter import filedialog
+from tkinter import simpledialog
 import moviepy.editor as mp
 import speech_recognition as sr
 from os.path import basename
+from yt_dlp import YoutubeDL
 import vlc
 
 
@@ -19,6 +21,9 @@ class Application(Tk):
         self.menu_fichier = Menu(self.barre_menu, tearoff=0)
         self.menu_fichier.add_command(
             label="Ouvrir un fichier vidéo...", command=self.open_video)
+
+        self.menu_fichier.add_command(
+            label="Télécharger un fichier vidéo...", command=self.download_video)
 
         self.barre_menu.add_cascade(label="Fichier", menu=self.menu_fichier)
 
@@ -94,18 +99,33 @@ class Application(Tk):
     def audio_to_text(self):
         "Convertir l'audio en texte"
         self.video_to_audio()  # Convertir la vidéo en audio
+        text_file_path = filedialog.asksaveasfilename(
+            title="Enregistrer l'audio sous forme de texte", defaultextension=".txt")
         recognition = sr.Recognizer()
 
         with sr.AudioFile("output.wav") as source:
             audio = recognition.record(source)
             texte = recognition.recognize_google(audio)
             print(texte)
-            text_file_path = filedialog.asksaveasfilename(
-                title="Enregistrer l'audio sous forme de texte", defaultextension=".txt")
 
             with open(text_file_path, "a") as f:
                 f.write(str(texte))
                 f.close()
+
+    def download_video(self):
+        "Télécharger une vidéo"
+
+        save_path = filedialog.askdirectory(
+            initialdir="C:", title="Sélectionnez le dossier d'enregistrement de la vidéo téléchargée")  # Demander à l'utilisateur où enregistrer le fichier à télécharger
+        ytl_opt = {
+            "outtmpl": f"{save_path}/%(title)s.%(ext)s"
+        }
+
+        url = simpledialog.askstring(
+            "URL de la vidéo", "Saisissez l'URL de la vidéo à télécharger:")
+
+        with YoutubeDL(ytl_opt) as ydl:
+            ydl.download([url])
 
 
 app = Application()
