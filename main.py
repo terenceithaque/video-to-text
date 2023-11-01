@@ -7,6 +7,7 @@ import speech_recognition as sr
 from os.path import basename
 from yt_dlp import YoutubeDL
 import vlc
+from plyer import notification
 
 
 class Application(Tk):
@@ -125,7 +126,10 @@ class Application(Tk):
             "URL de la vidéo", "Saisissez l'URL de la vidéo à télécharger:")
 
         with YoutubeDL(ytl_opt) as ydl:
+            notification.notify(title="Téléchargement démarré", message="Le téléchargement du fichier vidéo a commencé", app_icon = None, timeout=10)
             ydl.download([url])
+
+        notification.notify(title="Vidéo téléchargée avec succès", message= f"Le fichier vidéo (URL : {url}) a été téléchargé avec succès et est maintenant accessible dans {save_path}", app_icon = None, timeout = 10)
 
 
 app = Application()
